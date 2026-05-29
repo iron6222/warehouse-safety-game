@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倉儲安全小達人</title> 
+
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        /* =========================================================
+           1. 全站基礎設定
+        ========================================================= */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif;
+            background: linear-gradient(135deg, #dff3ff, #f7fbff);
+            color: #1f2b3a;
+        }
+
+        .app {
+            width: min(1180px, 100%);
+            margin: auto;
+            padding: 14px 18px 28px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.35s ease both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* =========================================================
+           2. 首頁標題區
+        ========================================================= */
+        .header {
+            min-height: 105px;
+            padding: 14px 28px;
+            border-radius: 22px;
+            color: white;
+            background: linear-gradient(135deg, #07376c, #0a5da8);
+            box-shadow: 0 8px 24px #0003;
+
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .header-title-area {
+            grid-column: 2;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 42px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .title span {
+            color: #ffd84d;
+        }
+
+        .subtitle {
+            margin-top: 6px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* =========================================================
+           3. 首頁主版面
+           - 左側：圖片、開始按鈕、說明與輸入欄位
+           - 右側：5 個關卡清單與提醒
+        ========================================================= */
+        .home-layout {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .panel {
+            height: 100%;
+            padding: 18px;
+            border: 4px solid #0b5fa5;
+            border-radius: 22px;
+            background: white;
+            box-shadow: 0 8px 22px #0002;
+        }
+
+        .home-main {
+            display: grid;
+            grid-template-columns: 330px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .image-start-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .home-image {
+            width: 100%;
+            height: 330px;
+            padding: 10px;
+            object-fit: contain;
+            border: 3px solid #c6ddeb;
+            border-radius: 18px;
+            background: #f7fbff;
+        }
+
+        .left-start-btn {
+            width: 220px;
+            margin-top: 18px;
+            padding: 12px 24px;
+        }
+
+        .home-info h2 {
+            margin: 4px 0 10px;
+            font-size: 32px;
+            color: #0b376f;
+        }
+
+        .home-info p {
+            font-size: 19px;
+            line-height: 1.65;
+            font-weight: 700;
+        }
+
+        .intro-list {
+            margin: 0 0 18px 0;
+            padding-left: 34px;
+            font-size: 19px;
+            line-height: 1.8;
+            font-weight: 700;
+        }
+
+        .intro-list li {
+            margin-bottom: 8px;
+        }
+
+        /* 玩家基本資料輸入欄位 */
+        .player-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .player-form input {
+            padding: 14px;
+            border: 2px solid #b7cde0;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .excel-upload-box {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border: 2px dashed #0b5fa5;
+            border-radius: 14px;
+            background: #f5fbff;
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.5;
+        }
+
+        .excel-upload-box input {
+            width: 100%;
+            margin-top: 8px;
+            padding: 10px;
+            border: 2px solid #b7cde0;
+            border-radius: 10px;
+            background: white;
+            font-weight: 700;
+        }
+
+        .excel-status {
+            margin-top: 8px;
+            color: #0b5fa5;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .header-upload-box {
+            grid-column: 3;
+            justify-self: end;
+            min-width: 360px;
+            padding: 10px 14px;
+            border: 2px solid #ffffff44;
+            border-radius: 18px;
+            background: #ffffff12;
+            display: grid;
+            grid-template-columns: 46px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            box-shadow: inset 0 0 0 1px #0002;
+        }
+
+        .upload-icon {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border: 2px solid #ffffff88;
+            border-radius: 10px;
+            font-size: 26px;
+        }
+
+        .upload-title {
+            font-size: 16px;
+            font-weight: 900;
+            line-height: 1.3;
+        }
+
+        .upload-note {
+            margin-top: 2px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #dfefff;
+        }
+
+        .header-upload-box input {
+            display: none;
+        }
+
+        .upload-btn {
+            display: inline-block;
+            padding: 12px 20px;
+            border: 3px solid #07376c;
+            border-radius: 14px;
+            color: white;
+            background: linear-gradient(#2c9df0, #0754a4);
+            box-shadow: 0 5px 0 #003a78;
+            font-size: 17px;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .upload-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #003a78;
+        }
+
+        /* =========================================================
+           4. 按鈕樣式
+        ========================================================= */
+        .btn {
+            border: none;
+            border-radius: 14px;
+            padding: 12px 24px;
+            font-size: 19px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #0004;
+            transition: 0.12s;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #0004;
+        }
+
+        .primary {
+            color: #111;
+            border: 3px solid #8d5700;
+            background: linear-gradient(#ffe36c, #ffb51c);
+        }
+
+        .blue {
+            color: white;
+            border: 3px solid #07376c;
+            background: linear-gradient(#2c9df0, #0754a4);
+        }
+
+        .green {
+            color: white;
+            border: 3px solid #0a6330;
+            background: linear-gradient(#35ca6e, #138a45);
+        }
+
+        /* =========================================================
+           5. 首頁右側關卡清單與提醒
+        ========================================================= */
+        .home-layout > div:last-child {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .preview-card {
+            display: grid;
+            grid-template-columns: 48px 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px solid #c4d9ea;
+            border-radius: 14px;
+            background: #f8fcff;
+        }
+
+        .preview-num {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: white;
+            background: #0b5fa5;
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        .preview-card h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .preview-card p {
+            margin: 3px 0 0;
+            color: #536270;
+            font-size: 14px;
+            line-height: 1.35;
+        }
+
+        .tip {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+
+              width: 100%;
+              box-sizing: border-box;
+              margin-top: auto;
+
+              padding: 14px 18px;
+              border-radius: 14px;
+
+              color: white;
+              background: #07376c;
+
+              font-weight: 800;
+              line-height: 1.6;
+       }
+       .tip-icon{
+                font-size: 24px;
+                flex-shrink: 0;
+       }
+
+        /* 維護者備註：目前以 HTML 註解方式隱藏，不顯示給同仁 */
+        .editor-note {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border: 2px solid #e2b600;
+            border-radius: 14px;
+            background: #fff8d8;
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        /* =========================================================
+           6. 遊戲頁版面
+        ========================================================= */
+        .topbar {
+            margin-bottom: 12px;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            background: #07376c;
+            border-radius: 18px;
+            box-shadow: 0 6px 16px #0003;
+        }
+
+        .status {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            padding: 7px 13px;
+            border: 1px solid #fff5;
+            border-radius: 999px;
+            background: #fff2;
+            font-weight: 900;
+        }
+
+        .progress {
+            height: 12px;
+            margin-bottom: 12px;
+            border-radius: 999px;
+            background: #c8ddeb;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #22a75a, #ffd84d);
+            transition: 0.35s;
+        }
+
+        .game-card {
+            padding: 16px;
+            border: 4px solid #0b5fa5;
+            border-radius: 22px;
+            background: white;
+            box-shadow: 0 8px 22px #0002;
+        }
+
+        .question {
+            margin-bottom: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #f5fbff;
+        }
+
+        .question h2 {
+            margin: 0;
+            color: #0b376f;
+            font-size: 28px;
+        }
+
+        .question p {
+            margin: 6px 0 0;
+            color: #d12525;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 16px;
+        }
+
+        .scene-image {
+            width: 100%;
+            height: 330px;
+            object-fit: contain;
+            border: 3px solid #bcd4e7;
+            border-radius: 18px;
+            background: #f7fbff;
+        }
+
+        .quiz-panel {
+            padding: 14px;
+            border: 3px solid #c4d9ea;
+            border-radius: 18px;
+            background: #f4f8fc;
+        }
+
+        .quiz-panel h3 {
+            margin: 0 0 10px;
+            font-size: 23px;
+        }
+
+        .option {
+            display: block;
+            width: 100%;
+            margin-bottom: 9px;
+            padding: 12px;
+            text-align: left;
+            border: 3px solid #c4d5e2;
+            border-radius: 13px;
+            background: white;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .option.selected {
+            border-color: #f2a400;
+            background: #fff1c7;
+        }
+
+        .feedback {
+            display: none;
+            margin-top: 10px;
+            padding: 13px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1.5;
+        }
+
+        .good {
+            color: #106a2f;
+            border: 2px solid #31b55c;
+            background: #e2ffe8;
+        }
+
+        .bad {
+            color: #9a1515;
+            border: 2px solid #e75a5a;
+            background: #ffe6e6;
+        }
+
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        /* =========================================================
+           7. 過場頁與結果頁
+        ========================================================= */
+        .transition-box,
+        .result-box {
+            max-width: 820px;
+            margin: 40px auto;
+            padding: 34px;
+            text-align: center;
+            border: 5px solid #0b5fa5;
+            border-radius: 28px;
+            background: white;
+            box-shadow: 0 12px 30px #0003;
+        }
+
+        .transition-box h1 {
+            margin: 0 0 12px;
+            color: #0b376f;
+            font-size: 44px;
+        }
+
+        .transition-score {
+            margin: 10px 0;
+            color: #f0a000;
+            font-size: 42px;
+            font-weight: 900;
+        }
+
+        .score-big {
+            margin: 6px 0;
+            color: #ffd21f;
+            font-size: 90px;
+            font-weight: 1000;
+            text-shadow: 4px 5px 0 #07376c;
+        }
+
+        .stars {
+            margin: 8px 0;
+            font-size: 56px;
+        }
+
+        .rank {
+            display: inline-block;
+            margin: 12px 0;
+            padding: 10px 28px;
+            border: 4px solid #9a5600;
+            border-radius: 999px;
+            background: linear-gradient(#ffdf69, #ff9c1a);
+            font-size: 26px;
+            font-weight: 900;
+        }
+
+        .review-list {
+            margin-top: 18px;
+            padding: 16px;
+            text-align: left;
+            border: 2px solid #c8ddeb;
+            border-radius: 16px;
+            background: #f7fbff;
+        }
+
+        .review-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #d9e7f1;
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        /* =========================================================
+           8. 響應式版面
+           螢幕較窄時改成單欄，避免手機或小視窗跑版。
+        ========================================================= */
+        @media (max-width: 700px) {
+            .home-layout,
+            .home-main,
+            .game-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .title {
+                font-size: 34px;
+            }
+
+            .home-image,
+            .scene-image {
+                height: 260px;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .header-title-area,
+            .header-upload-box {
+                grid-column: 1;
+                justify-self: center;
+            }
+
+            .header-upload-box {
+                min-width: 0;
+                width: 100%;
+                grid-template-columns: 40px 1fr;
+            }
+
+            .upload-btn {
+                grid-column: 1 / -1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- =========================================================
+             首頁
+        ========================================================== -->
+        <section id="home" class="screen active">
+            <div class="header">
+                <div class="header-title-area">
+                    <div class="title">倉儲安全<span>小達人</span> ⚡</div> 
+                    <div class="subtitle">找出危險行為，避免危害發生！</div> 
+                </div>
+
+                <div class="header-upload-box" title="上傳 Excel 題庫">
+                    <div class="upload-icon">📄</div>
+                    <div>
+                        <div class="upload-title">選擇題庫 Excel 檔</div>
+                        <div class="upload-note">上傳後將自動更新題目內容</div>
+                    </div>
+                    <label class="upload-btn" for="quizExcelInput">選擇檔案</label>
+                    <input type="file" id="quizExcelInput" accept=".xlsx,.xls" onchange="loadQuizExcel(event)">
+                </div>
+            </div>
+            <div class="excel-status" id="excelStatus" style="display:none;">目前使用：HTML 內建題庫</div>
+
+            <div class="home-layout">
+                <div class="panel">
+                    <div class="home-main">
+                        <div class="image-start-area">
+                            <img class="home-image" src="images/level.png" alt="首頁主視覺">
+
+                            <button class="btn primary left-start-btn" onclick="startGame()">
+                                ▶ 開始遊戲
+                            </button>
+                        </div>
+
+                        <div class="home-info">
+                            <h2>遊戲說明</h2>
+
+                            <ul class="intro-list">
+                                <li>請依序完成所有挑戰關卡。</li>
+                                <li>每關選擇正確答案，答對加分，答錯會顯示正確觀念。</li>
+                            </ul>
+
+                            <p>目標：熟悉倉儲安全觀念，避免危險與事故發生。</p> 
+
+                            <div class="player-form">
+                                <input id="playerName" type="text" placeholder="請輸入姓名">
+                                <input id="employeeId" type="text" placeholder="請輸入工號">
+                                <input id="department" type="text" placeholder="請輸入部門">
+                            </div>
+
+                            <!--
+                                維護者備註：
+                                1. 圖片：替換 images 資料夾內同檔名圖片。
+                                2. 題目、答案、提示、解說：修改 JavaScript 的 levels 陣列。
+                                3. 若要新增關卡：複製 levels 陣列其中一段即可。
+                            -->
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div id="levelPreview"></div>
+                    <div class="tip">
+                    <span class="tip-icon">💡</span>
+                    <span>小提醒：作業時，請務必遵守 SOP 與安全原則，共同維護作業安全！</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             遊戲頁
+        ========================================================== -->
+        <section id="game" class="screen">
+            <div class="topbar">
+                <div class="status">
+                    <div class="pill" id="levelPill">關卡 1 / 5</div>
+                    <div class="pill">⭐ 得分 <span id="scoreText">0</span></div>
+                    <div class="pill">⏱ <span id="timerText">20</span> 秒</div>
+                </div>
+
+                <button class="btn blue" onclick="confirmHome()">回首頁</button>
+            </div>
+
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="game-card">
+                <div class="question">
+                    <h2 id="questionTitle"></h2>
+                    <p id="questionSub"></p>
+                </div>
+
+                <div class="game-layout">
+                    <img id="sceneImage" class="scene-image" alt="關卡圖片">
+
+                    <div class="quiz-panel">
+                        <h3>請選擇正確答案</h3>
+                        <div id="options"></div>
+                        <div class="feedback" id="feedback"></div>
+
+                        <div class="action-row">
+                            <button class="btn blue" onclick="showHint()">提示</button>
+                            <button class="btn primary" id="submitBtn" onclick="submitAnswer()">送出答案</button>
+                            <button class="btn green" id="nextBtn" onclick="showTransition()" style="display:none;">下一步 ➜</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             關卡完成過場頁
+        ========================================================== -->
+        <section id="transition" class="screen">
+            <div class="transition-box">
+                <h1 id="transitionTitle">第 1 關完成！</h1>
+                <div class="transition-score" id="transitionScore">安全觀念 +20</div>
+                <p id="transitionText" style="font-size:20px;font-weight:800;line-height:1.6;"></p>
+                <button class="btn primary" onclick="nextLevel()">繼續下一關</button>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             結果頁
+        ========================================================== -->
+        <section id="result" class="screen">
+            <div class="result-box">
+                <h1 style="font-size:44px;margin:0;">遊戲結束！</h1>
+                <div class="score-big"><span id="finalScore">0</span> 分</div>
+                <div class="stars" id="stars">⭐⭐⭐</div>
+                <div class="rank" id="rankText">延長線安全小達人</div>
+
+                <div style="font-size:20px;font-weight:800;margin-top:10px;">
+                    正確題數：<span id="correctCount">0</span> / <span id="totalCount">5</span>｜遊戲時間：<span id="totalTime">0</span> 秒
+                </div>
+
+                <div class="review-list" id="wrongReview"></div>
+
+                <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                    <button class="btn blue" onclick="showScreen('home')">回首頁</button>
+                    <button class="btn primary" onclick="startGame()">再玩一次</button>
+                    <button class="btn green"onclick="document.body.innerHTML='<div style=&quot;display:flex;justify-content:center;align-items:center;height:100vh;font-size:42px;font-weight:900;font-family:Microsoft JhengHei;background:#eef5fb;color:#0b5fa5;&quot;>訓練完成，請關閉頁面</div>';">結束</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        /* =========================================================
+           1. 關卡資料區
+           後續要改圖片、題目、選項、答案、提示、解說，主要修改這裡。
+           answer 規則：A=0、B=1、C=2
+        ========================================================= */
+        let levels = [
+            {
+                title: "請不要插好插滿",
+                question: "這個情境最大的危險是什麼？",
+                image: "images/level1_overload.png",
+                hint: "看到延長線的插孔插滿了，就要想到過載、發熱、危險。",
+                options: [
+                    "只是看起來凌亂，沒有危險",
+                    "插頭顏色不同，所以不能一起使用",
+                    "一個插座插太多電器，可能過載發熱"
+                ],
+                answer: 2,
+                explanation: "延長線過載可能造成發熱、熔毀，嚴重時甚至引發火災。"
+            },
+            {
+                title: "不延長又延長",
+                question: "為什麼延長線不建議一條接一條？",
+                image: "images/level2_chain.png",
+                hint: "延長線越接越長，不代表越安全，反而可能增加接點與負載風險。",
+                options: [
+                    "串接會增加接點與發熱風險，應避免",
+                    "比較方便，所以可以一直串接",
+                    "只要插得進去就沒問題"
+                ],
+                answer: 0,
+                explanation: "延長線串接會增加接點、電阻與發熱機會，也容易忽略負載總量。"
+            },
+            {
+                title: "不使用高功率家電",
+                question: "下列哪一類電器最不適合接在一般延長線？",
+                image: "images/level3_highpower.png",
+                hint: "會快速加熱、產生大量熱能的設備，通常功率較高，此類家電不適合插在延長線上。",
+                options: [
+                    "手機充電器",
+                    "電鍋、電熱水壺、電磁爐等高功率家電",
+                    "小型桌燈"
+                ],
+                answer: 1,
+                explanation: "高功率家電容易造成延長線過載，建議直接使用牆壁插座並確認規格。"
+            },
+            {
+                title: "不綑綁使用",
+                question: "延長線為什麼不可綑綁使用？",
+                image: "images/level4_bundle.png",
+                hint: "電線使用時會發熱，散熱不良就是危險。",
+                options: [
+                    "綑綁比較醜，所以不建議",
+                    "熱量不易散出，可能造成外皮熔化或短路",
+                    "綑綁會讓電流變小"
+                ],
+                answer: 1,
+                explanation: "延長線綑綁後散熱不良，長時間使用可能造成外皮熔化或短路。"
+            },
+            {
+                title: "要定期汰舊換新",
+                question: "如果延長線外皮破損、插座鬆動或有焦味，應該怎麼做？",
+                image: "images/level5_old.png",
+                hint: "有破損、焦味、發燙，都不是小問題。",
+                options: [
+                    "繼續使用，等完全壞掉再換",
+                    "貼膠帶後繼續使用即可",
+                    "立即停止使用並更換新品"
+                ],
+                answer: 2,
+                explanation: "老舊或破損的延長線容易造成短路、漏電或感電，應立即停止使用並更換。"
+            }
+        ];
+
+        // 保留 HTML 內建題庫，方便使用者恢復預設內容
+        const defaultLevels = JSON.parse(JSON.stringify(levels));
+
+        /* =========================================================
+           1-1. Excel 題庫上傳
+           Excel 欄位建議：
+           關卡編號、標題、副標題、題目、圖片檔名、提示、選項A、選項B、選項C、正確答案、說明
+        ========================================================= */
+        function loadQuizExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (typeof XLSX === "undefined") {
+                alert("Excel 讀取套件尚未載入。請確認電腦可連上網路，或改用含本機 SheetJS 的版本。");
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: "array" });
+                    const firstSheetName = findQuizSheetName(workbook);
+                    const worksheet = workbook.Sheets[firstSheetName];
+
+                    // 用 header:1 讀取原始陣列，避免 Excel 欄名有空白、換行、全形空白時讀不到。
+                    const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                    const parsed = parseQuizRows(rawRows);
+
+                    if (parsed.levels.length === 0) {
+                        alert(
+                            "Excel 沒有讀到題目資料。\n\n" +
+                            "目前讀到的欄位：\n" + parsed.headers.join("、") + "\n\n" +
+                            "請確認至少要有：題目、圖片、選項、正確答案。"
+                        );
+                        return;
+                    }
+
+                    levels = parsed.levels;
+                    localStorage.setItem("quizLevels", JSON.stringify(levels));
+                    localStorage.setItem("quizExcelHeaders", JSON.stringify(parsed.headers));
+
+                    buildPreview();
+                    document.getElementById("totalCount").textContent = levels.length;
+                    document.getElementById("excelStatus").textContent = `目前使用：${file.name}，共 ${levels.length} 關；欄位：${parsed.headers.join("、")}`;
+                    alert(`題庫更新完成，共匯入 ${levels.length} 關。`);
+                } catch (error) {
+                    console.error(error);
+                    alert("讀取 Excel 失敗，請確認檔案格式與欄位名稱。詳細錯誤請看瀏覽器 Console。");
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function findQuizSheetName(workbook) {
+            // 優先讀取名稱含「題庫」或「quiz」的工作表；找不到就讀第一張。
+            return workbook.SheetNames.find(name => /題庫|quiz/i.test(name)) || workbook.SheetNames[0];
+        }
+
+        function normalizeHeaderText(text) {
+            return String(text || "")
+                .replace(/\u3000/g, " ")       // 全形空白轉半形
+                .replace(/\s+/g, "")           // 移除空白、換行
+                .replace(/[：:]/g, "")          // 移除冒號
+                .trim()
+                .toLowerCase();
+        }
+
+        const headerAliases = {
+            levelNo: ["關卡編號", "編號", "序號", "關卡", "level", "no", "id"],
+            title: ["標題", "關卡標題", "主題", "title"],
+            subtitle: ["副標題", "小標", "提醒", "subtitle", "subTitle"],
+            question: ["題目", "題目內容", "問題", "問題內容", "question"],
+            image: ["圖片檔名", "圖片", "圖片名稱", "圖檔", "圖檔名稱", "image", "imagefile", "filename"],
+            hint: ["提示", "hint", "提示文字"],
+            optionA: ["選項a", "選項A", "a", "答案a", "optiona", "optionA"],
+            optionB: ["選項b", "選項B", "b", "答案b", "optionb", "optionB"],
+            optionC: ["選項c", "選項C", "c", "答案c", "optionc", "optionC"],
+            optionD: ["選項d", "選項D", "d", "答案d", "optiond", "optionD"],
+            answer: ["正確答案", "答案", "解答", "正解", "correctanswer", "answer"],
+            explanation: ["說明", "解說", "解析", "答案說明", "重點說明", "explanation"]
+        };
+
+        function findColumnIndex(headers, fieldName) {
+            const normalizedHeaders = headers.map(normalizeHeaderText);
+            const aliases = headerAliases[fieldName].map(normalizeHeaderText);
+            return normalizedHeaders.findIndex(header => aliases.includes(header));
+        }
+
+        function parseQuizRows(rawRows) {
+            const headerRowIndex = rawRows.findIndex(row => {
+                const normalized = row.map(normalizeHeaderText);
+                return normalized.some(cell => ["題目", "問題", "question"].includes(cell)) ||
+                       normalized.some(cell => ["圖片檔名", "圖片", "image"].includes(cell));
+            });
+
+            if (headerRowIndex === -1) {
+                return { headers: [], levels: [] };
+            }
+
+            const headers = rawRows[headerRowIndex].map(cell => String(cell || "").trim()).filter(text => text !== "");
+            const columnMap = {};
+            Object.keys(headerAliases).forEach(field => {
+                columnMap[field] = findColumnIndex(rawRows[headerRowIndex], field);
+            });
+
+            const dataRows = rawRows.slice(headerRowIndex + 1);
+            const levelsFromExcel = dataRows
+                .map(row => rowArrayToLevel(row, columnMap))
+                .filter(level => level.question || level.title || level.image)
+                .filter(level => level.question && level.options.length >= 2);
+
+            return { headers, levels: levelsFromExcel };
+        }
+
+        function getCell(row, columnMap, fieldName) {
+            const index = columnMap[fieldName];
+            if (index === undefined || index < 0) return "";
+            return String(row[index] || "").trim();
+        }
+
+        function rowArrayToLevel(row, columnMap) {
+            const optionTexts = [
+                getCell(row, columnMap, "optionA"),
+                getCell(row, columnMap, "optionB"),
+                getCell(row, columnMap, "optionC"),
+                getCell(row, columnMap, "optionD")
+            ].filter(text => text !== "");
+
+            const answerText = getCell(row, columnMap, "answer");
+            const answerIndex = parseAnswer(answerText, optionTexts);
+
+            return {
+                title: getCell(row, columnMap, "title"),
+                subtitle: getCell(row, columnMap, "subtitle"),
+                question: getCell(row, columnMap, "question"),
+                image: normalizeImagePath(getCell(row, columnMap, "image")),
+                hint: getCell(row, columnMap, "hint"),
+                options: optionTexts,
+                answer: answerIndex,
+                explanation: getCell(row, columnMap, "explanation")
+            };
+        }
+
+        function rowToLevel(row) {
+            // 保留舊版物件格式相容性。
+            const normalizedRow = {};
+            Object.keys(row).forEach(key => {
+                normalizedRow[normalizeHeaderText(key)] = row[key];
+            });
+
+            function pick(fieldName) {
+                for (const alias of headerAliases[fieldName]) {
+                    const key = normalizeHeaderText(alias);
+                    if (normalizedRow[key] !== undefined) return String(normalizedRow[key] || "").trim();
+                }
+                return "";
+            }
+
+            const options = [pick("optionA"), pick("optionB"), pick("optionC"), pick("optionD")].filter(text => text !== "");
+
+            return {
+                title: pick("title"),
+                subtitle: pick("subtitle"),
+                question: pick("question"),
+                image: normalizeImagePath(pick("image")),
+                hint: pick("hint"),
+                options: options,
+                answer: parseAnswer(pick("answer"), options),
+                explanation: pick("explanation")
+            };
+        }
+
+        function normalizeImagePath(imageName) {
+            if (!imageName) return "";
+            if (imageName.startsWith("images/") || imageName.startsWith("./") || imageName.startsWith("http") || imageName.startsWith("data:")) {
+                return imageName;
+            }
+            return "images/" + imageName;
+        }
+
+        function parseAnswer(answerText, options = []) {
+            const text = String(answerText || "").trim().toUpperCase();
+            const answerMap = { "A": 0, "B": 1, "C": 2, "D": 3 };
+            if (text in answerMap) return answerMap[text];
+
+            const answerNumber = Number(text);
+            if (!Number.isNaN(answerNumber)) {
+                // 可接受 0/1/2/3，也可接受 1/2/3/4
+                if (answerNumber >= 0 && answerNumber <= 3) return answerNumber;
+                if (answerNumber >= 1 && answerNumber <= 4) return answerNumber - 1;
+            }
+
+            // 也可接受直接填入正確答案文字。
+            const optionIndex = options.findIndex(option => String(option).trim() === String(answerText || "").trim());
+            if (optionIndex >= 0) return optionIndex;
+
+            return 0;
+        }
+
+        function loadSavedQuizLevels() {
+            const saved = localStorage.getItem("quizLevels");
+            if (!saved) return;
+
+            try {
+                levels = JSON.parse(saved);
+                const savedHeaders = JSON.parse(localStorage.getItem("quizExcelHeaders") || "[]");
+                document.getElementById("excelStatus").textContent = savedHeaders.length > 0
+                    ? `目前使用：上次上傳題庫，共 ${levels.length} 關；欄位：${savedHeaders.join("、")}`
+                    : `目前使用：上次上傳題庫，共 ${levels.length} 關`;
+            } catch (error) {
+                console.error(error);
+                localStorage.removeItem("quizLevels");
+                localStorage.removeItem("quizExcelHeaders");
+            }
+        }
+
+        function clearUploadedQuiz() {
+            localStorage.removeItem("quizLevels");
+            localStorage.removeItem("quizExcelHeaders");
+            levels = JSON.parse(JSON.stringify(defaultLevels));
+            buildPreview();
+            document.getElementById("excelStatus").textContent = "目前使用：HTML 內建題庫";
+            alert("已恢復 HTML 內建題庫。若畫面仍未更新，請按 Ctrl + F5 強制重新整理。");
+        }
+
+        /* =========================================================
+           2. 遊戲狀態變數
+        ========================================================= */
+        let current = 0;          // 目前關卡索引，從 0 開始
+        let score = 0;            // 累計分數
+        let correct = 0;          // 答對題數
+        let selected = null;      // 玩家目前選擇的答案索引
+        let answered = false;     // 本題是否已作答
+        let timeLeft = 20;        // 每題倒數秒數
+        let timer = null;         // setInterval 回傳的計時器 ID
+        let startedAt = 0;        // 遊戲開始時間
+        let wrongAnswers = [];    // 錯題回顧資料
+
+        /* =========================================================
+           3. 通用工具：畫面切換
+        ========================================================= */
+        function showScreen(id) {
+            document.querySelectorAll(".screen").forEach(screen => {
+                screen.classList.remove("active");
+            });
+
+            document.getElementById(id).classList.add("active");
+
+            if (id !== "game") {
+                stopTimer();
+            }
+        }
+
+        /* =========================================================
+           4. 首頁關卡清單
+        ========================================================= */
+        function buildPreview() {
+            const previewHtml = levels.map((lv, index) => `
+                <div class="preview-card">
+                    <div class="preview-num">${index + 1}</div>
+                    <div>
+                        <h3>${lv.title}</h3>
+                        <p>${lv.subtitle || ""}</p>
+                    </div>
+                </div>
+            `).join("");
+
+            document.getElementById("levelPreview").innerHTML = previewHtml;
+        }
+
+        /* =========================================================
+           5. 開始遊戲與玩家資料檢核
+        ========================================================= */
+        function startGame() {
+            const name = document.getElementById("playerName").value.trim();
+            const employeeId = document.getElementById("employeeId").value.trim();
+            const department = document.getElementById("department").value.trim();
+
+            // 姓名：中文 2～5 個字
+            const nameRule = /^[一-龥]{2,5}$/;
+
+            // 工號：數字 2～10 碼；如需固定 5 碼，可改成 /^[0-9]{5}$/
+            const employeeIdRule = /^[0-9]{2,10}$/;
+
+            // 部門：中文 2～10 個字
+            const departmentRule = /^[一-龥]{2,10}$/;
+
+            if (!nameRule.test(name)) {
+                alert("姓名請輸入中文，長度 2～5 個字。");
+                return;
+            }
+
+            if (!employeeIdRule.test(employeeId)) {
+                alert("工號請輸入數字，長度 2～10 碼。");
+                return;
+            }
+
+            if (!departmentRule.test(department)) {
+                alert("部門請輸入中文，長度 2～10 個字。");
+                return;
+            }
+
+            // 儲存玩家資料，完成遊戲時會一起送到 Google Sheet
+            localStorage.setItem("playerName", name);
+            localStorage.setItem("employeeId", employeeId);
+            localStorage.setItem("department", department);
+
+            current = 0;
+            score = 0;
+            correct = 0;
+            selected = null;
+            answered = false;
+            wrongAnswers = [];
+            startedAt = Date.now();
+
+            showScreen("game");
+            renderLevel();
+        }
+
+        /* =========================================================
+           6. 測試用跳關功能
+           使用方式：在瀏覽器 Console 輸入 goToLevel(3)
+        ========================================================= */
+        function goToLevel(levelNumber) {
+            current = Math.max(0, Math.min(levelNumber - 1, levels.length - 1));
+            score = 0;
+            correct = 0;
+            selected = null;
+            answered = false;
+            wrongAnswers = [];
+            startedAt = Date.now();
+
+            showScreen("game");
+            renderLevel();
+        }
+
+        /* =========================================================
+           7. 顯示目前關卡
+        ========================================================= */
+        function renderLevel() {
+            stopTimer();
+
+            selected = null;
+            answered = false;
+
+            const lv = levels[current];
+
+            document.getElementById("levelPill").textContent = `關卡 ${current + 1} / ${levels.length}`;
+            document.getElementById("scoreText").textContent = score;
+            document.getElementById("progressBar").style.width = `${(current / levels.length) * 100}%`;
+
+            document.getElementById("questionTitle").textContent = lv.question;
+            document.getElementById("questionSub").textContent = lv.subtitle || "";
+            document.getElementById("sceneImage").src = lv.image;
+
+            document.getElementById("options").innerHTML = lv.options.map((optionText, index) => `
+                <button class="option" onclick="selectOption(${index})">
+                    ${String.fromCharCode(65 + index)}. ${optionText}
+                </button>
+            `).join("");
+
+            resetFeedback();
+            startTimer();
+        }
+
+        /* =========================================================
+           8. 重置答案回饋區與按鈕狀態
+        ========================================================= */
+        function resetFeedback() {
+            const feedback = document.getElementById("feedback");
+            feedback.style.display = "none";
+            feedback.className = "feedback";
+            feedback.textContent = "";
+
+            document.getElementById("submitBtn").style.display = "inline-block";
+            document.getElementById("nextBtn").style.display = "none";
+            document.getElementById("nextBtn").textContent = "下一步 ➜";
+        }
+
+        /* =========================================================
+           9. 倒數計時
+        ========================================================= */
+        function startTimer() {
+            timeLeft = 20;
+            updateTimer();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+
+                if (timeLeft <= 0) {
+                    stopTimer();
+
+                    if (!answered) {
+                        selected = null;
+                        showFeedback(false, true);
+                    }
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        }
+
+        function updateTimer() {
+            document.getElementById("timerText").textContent = timeLeft;
+        }
+
+        /* =========================================================
+           10. 作答流程
+        ========================================================= */
+        function selectOption(index) {
+            if (answered) return;
+
+            selected = index;
+
+            document.querySelectorAll(".option").forEach((button, buttonIndex) => {
+                button.classList.toggle("selected", buttonIndex === index);
+            });
+        }
+
+        function submitAnswer() {
+            if (answered) return;
+
+            if (selected === null) {
+                alert("請先選擇一個答案！");
+                return;
+            }
+
+            const isCorrect = selected === levels[current].answer;
+            showFeedback(isCorrect, false);
+        }
+
+        function showFeedback(isCorrect, isTimeout) {
+            answered = true;
+            stopTimer();
+
+            const lv = levels[current];
+
+            if (isCorrect) {
+                score += 20;
+                correct++;
+            } else {
+                wrongAnswers.push({
+                    title: lv.title,
+                    question: lv.question,
+                    correctAnswer: lv.options[lv.answer],
+                    explanation: lv.explanation
+                });
+            }
+
+            document.getElementById("scoreText").textContent = score;
+
+            const feedback = document.getElementById("feedback");
+            feedback.style.display = "block";
+            feedback.className = "feedback " + (isCorrect ? "good" : "bad");
+            feedback.textContent = isCorrect
+                ? "答對！" + lv.explanation
+                : (isTimeout ? "時間到！" : "答錯！")
+                    + "正確答案是：「"
+                    + lv.options[lv.answer]
+                    + "」。"
+                    + lv.explanation;
+
+            markAnswerOptions(lv);
+
+            document.getElementById("submitBtn").style.display = "none";
+            document.getElementById("nextBtn").style.display = "inline-block";
+            document.getElementById("nextBtn").textContent = current === levels.length - 1
+                ? "🎉 完成遊戲"
+                : "下一步 ➜";
+        }
+
+        function markAnswerOptions(lv) {
+            document.querySelectorAll(".option").forEach((button, index) => {
+                if (index === lv.answer) {
+                    button.style.borderColor = "#22a75a";
+                }
+
+                if (index === selected && index !== lv.answer) {
+                    button.style.borderColor = "#d93b3b";
+                }
+            });
+        }
+
+        /* =========================================================
+           11. 關卡過場與下一關
+        ========================================================= */
+        function showTransition() {
+            const lv = levels[current];
+            const isLastLevel = current === levels.length - 1;
+            const isCorrect = selected === lv.answer;
+
+            document.getElementById("transitionTitle").textContent = isLastLevel
+                ? "🎉 恭喜完成所有挑戰！"
+                : `第 ${current + 1} 關完成！`;
+
+            document.getElementById("transitionScore").textContent = isCorrect
+                ? "安全觀念 +20"
+                : "安全觀念再加強";
+
+            document.getElementById("transitionText").textContent = lv.explanation;
+
+            document.querySelector("#transition .btn.primary").textContent = isLastLevel
+                ? "查看成績"
+                : "繼續下一關";
+
+            showScreen("transition");
+        }
+
+        function nextLevel() {
+            if (current < levels.length - 1) {
+                current++;
+                showScreen("game");
+                renderLevel();
+                return;
+            }
+
+            finishGame();
+        }
+
+        /* =========================================================
+           12. 結果儲存與 Google Sheet 上傳
+        ========================================================= */
+        function saveGameResult() {
+            const playSeconds = Math.round((Date.now() - startedAt) / 1000);
+            const result = {
+                time: new Date().toLocaleString(),
+                name: localStorage.getItem("playerName") || "",
+                employeeId: localStorage.getItem("employeeId") || "",
+                department: localStorage.getItem("department") || "",
+                score: score,
+                correct: correct,
+                total: levels.length,
+                totalTime: playSeconds,
+                wrongQuestions: wrongAnswers.map(wrong => wrong.title).join("、"),
+                needImprove: wrongAnswers.map(wrong => wrong.explanation).join("；"),
+                status: "已完成"
+            };
+
+            console.log("本次遊戲紀錄：", result);
+            submitResultToGoogleSheet(result);
+
+            return result;
+        }
+
+        function submitResultToGoogleSheet(data) {
+            // Google Apps Script Web App URL
+            const url = "https://script.google.com/macros/s/AKfycbzdAovH8eCdQ0lqK1hMW7dhzPmkNCW9DYYFCcDtDaZkCou9HkOH4kGo7mSnshRcLQpOVA/exec";
+
+            fetch(url, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify(data)
+            })
+                .then(() => {
+                    console.log("已送出成績資料");
+                })
+                .catch(error => {
+                    console.error("上傳失敗：", error);
+                });
+        }
+
+        function finishGame() {
+            stopTimer();
+            saveGameResult();
+
+            const seconds = Math.round((Date.now() - startedAt) / 1000);
+
+            document.getElementById("finalScore").textContent = score;
+            document.getElementById("correctCount").textContent = correct;
+            document.getElementById("totalCount").textContent = levels.length;
+            document.getElementById("totalTime").textContent = seconds;
+
+            setRankByScore();
+            renderWrongReview();
+            showScreen("result");
+        }
+
+        function setRankByScore() {
+            let rank = "安全觀念新手";
+            let stars = "⭐";
+
+            if (score >= 100) {
+                rank = "延長線安全小達人";
+                stars = "⭐⭐⭐";
+            } else if (score >= 60) {
+                rank = "安全用電好幫手";
+                stars = "⭐⭐";
+            }
+
+            document.getElementById("rankText").textContent = rank;
+            document.getElementById("stars").textContent = stars;
+        }
+
+        function renderWrongReview() {
+            const review = document.getElementById("wrongReview");
+
+            if (wrongAnswers.length === 0) {
+                review.innerHTML = `
+                    <h3>錯題回顧</h3>
+                    <div class="review-item">太棒了！本次沒有答錯題目。</div>
+                `;
+                return;
+            }
+
+            review.innerHTML = `
+                <h3>錯題回顧</h3>
+            ` + wrongAnswers.map(wrong => `
+                <div class="review-item">
+                    <b>${wrong.title}</b><br>
+                    題目：${wrong.question}<br>
+                    正確答案：${wrong.correctAnswer}<br>
+                    重點：${wrong.explanation}
+                </div>
+            `).join("");
+        }
+
+        /* =========================================================
+           13. 其他功能
+        ========================================================= */
+        function showHint() {
+            alert("提示：" + levels[current].hint);
+        }
+
+        function confirmHome() {
+            if (confirm("確定要離開目前關卡嗎？")) {
+                showScreen("home");
+            }
+        }
+
+        /* =========================================================
+           14. 初始化
+        ========================================================= */
+        loadSavedQuizLevels();
+        buildPreview();
+    </script>
+</body>
+</html>
