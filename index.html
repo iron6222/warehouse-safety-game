@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>倉儲安全小達人</title> 
-
+    <title>延長線安全小達人</title>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -350,27 +349,16 @@
         }
 
         .tip {
-              display: flex;
-              align-items: center;
-              gap: 10px;
-
-              width: 100%;
-              box-sizing: border-box;
-              margin-top: auto;
-
-              padding: 14px 18px;
-              border-radius: 14px;
-
-              color: white;
-              background: #07376c;
-
-              font-weight: 800;
-              line-height: 1.6;
-       }
-       .tip-icon{
-                font-size: 24px;
-                flex-shrink: 0;
-       }
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: auto;
+            padding: 12px 14px;
+            border-radius: 14px;
+            color: white;
+            background: #07376c;
+            font-weight: 800;
+            line-height: 1.5;
+        }
 
         /* 維護者備註：目前以 HTML 註解方式隱藏，不顯示給同仁 */
         .editor-note {
@@ -659,8 +647,8 @@
         <section id="home" class="screen active">
             <div class="header">
                 <div class="header-title-area">
-                    <div class="title">倉儲安全<span>小達人</span> ⚡</div> 
-                    <div class="subtitle">找出危險行為，避免危害發生！</div> 
+                    <div class="title">延長線安全<span>小達人</span> ⚡</div>
+                    <div class="subtitle">找出危險用電行為，避免火災發生！</div>
                 </div>
 
                 <div class="header-upload-box" title="上傳 Excel 題庫">
@@ -694,7 +682,7 @@
                                 <li>每關選擇正確答案，答對加分，答錯會顯示正確觀念。</li>
                             </ul>
 
-                            <p>目標：熟悉倉儲安全觀念，避免危險與事故發生。</p> 
+                            <p>目標：學會延長線安全使用原則，避免過載、發熱與火災。</p>
 
                             <div class="player-form">
                                 <input id="playerName" type="text" placeholder="請輸入姓名">
@@ -714,10 +702,7 @@
 
                 <div>
                     <div id="levelPreview"></div>
-                    <div class="tip">
-                    <span class="tip-icon">💡</span>
-                    <span>小提醒：作業時，請務必遵守 SOP 與安全原則，共同維護作業安全！</span>
-                    </div>
+                    <div class="tip">💡 小提醒：使用延長線時，請遵守安全原則，才能避免火災及危險！</div>
                 </div>
             </div>
         </section>
@@ -1075,6 +1060,54 @@
             if (optionIndex >= 0) return optionIndex;
 
             return 0;
+        }
+
+
+        async function loadQuizExcelFromUrl(url = "quiz_content_template.xlsx") {
+            if (typeof XLSX === "undefined") {
+                console.warn("Excel 讀取套件尚未載入，無法自動載入線上題庫。");
+                return;
+            }
+
+            // 若使用者曾手動上傳題庫，優先保留手動上傳的版本。
+            // 如果想每次都讀 GitHub 上的 Excel，可刪除這段 if。
+            if (localStorage.getItem("quizLevels")) {
+                return;
+            }
+
+            try {
+                const response = await fetch(url + "?v=" + Date.now());
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: "array" });
+                const firstSheetName = findQuizSheetName(workbook);
+                const worksheet = workbook.Sheets[firstSheetName];
+                const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                const parsed = parseQuizRows(rawRows);
+
+                if (parsed.levels.length === 0) {
+                    console.warn("線上 Excel 沒有讀到題目資料。欄位：", parsed.headers);
+                    return;
+                }
+
+                levels = parsed.levels;
+                buildPreview();
+
+                const status = document.getElementById("excelStatus");
+                if (status) {
+                    status.textContent = `目前使用：GitHub 線上題庫 ${url}，共 ${levels.length} 關`;
+                }
+
+                const totalCount = document.getElementById("totalCount");
+                if (totalCount) totalCount.textContent = levels.length;
+
+                console.log(`已自動載入 GitHub 線上題庫：${url}，共 ${levels.length} 關`);
+            } catch (error) {
+                console.warn("自動載入 GitHub 線上 Excel 題庫失敗：", error);
+            }
         }
 
         function loadSavedQuizLevels() {
@@ -1518,6 +1551,7 @@
         ========================================================= */
         loadSavedQuizLevels();
         buildPreview();
+        loadQuizExcelFromUrl("quiz_content_template.xlsx");
     </script>
 </body>
 </html>
