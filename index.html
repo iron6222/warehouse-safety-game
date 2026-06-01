@@ -165,17 +165,20 @@
         .player-form {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin: 20px 0;
+            gap: 10px;
+            margin: 8px 0;
         }
 
-        .player-form input {
-            padding: 14px;
-            border: 2px solid #b7cde0;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 700;
-        }
+      .player-form input {
+           width: 280px;          /* ← 控制寬度 */
+           height: 40px;          /* ← 控制高度 */
+           padding: 14px 20px;
+           border: 2px solid #b7cde0;
+           border-radius: 14px;
+           font-size: 20px;       /* ← 文字大小 */
+           font-weight: 700;
+           box-sizing: border-box;
+       }
 
         .excel-upload-box {
             margin-top: 14px;
@@ -379,7 +382,7 @@
             margin-bottom: 12px;
             padding: 12px 18px;
             display: flex;
-            justify-content: space-between;
+            justify-content:  flex-start;
             align-items: center;
             gap: 12px;
             color: white;
@@ -660,9 +663,11 @@
                         <div class="image-start-area">
                             <img class="home-image" src="images/level.png" alt="首頁主視覺">
 
-                            <button class="btn primary left-start-btn" onclick="startGame()">
-                                ▶ 開始遊戲
-                            </button>
+                            <div class="player-form">
+                                 <input id="playerName" type="text" placeholder="請輸入姓名">
+                                 <input id="employeeId" type="text" placeholder="請輸入工號">
+                                 <input id="department" type="text" placeholder="請輸入部門">
+                            </div>
                         </div>
 
                         <div class="home-info">
@@ -675,11 +680,9 @@
 
                             <p>目標：熟悉倉儲安全觀念，避免危險與事故發生。</p>
 
-                            <div class="player-form">
-                                <input id="playerName" type="text" placeholder="請輸入姓名">
-                                <input id="employeeId" type="text" placeholder="請輸入工號">
-                                <input id="department" type="text" placeholder="請輸入部門">
-                            </div>
+                           <button class="btn primary left-start-btn" onclick="startGame()">
+                               ▶ 開始遊戲
+                           </button>
 
                             <!--
                                 維護者備註：
