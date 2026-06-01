@@ -312,29 +312,30 @@
             height: 100%;
         }
 
-        .preview-card {
-            display: grid;
-            grid-template-columns: 48px 1fr;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 2px solid #c4d9ea;
-            border-radius: 14px;
-            background: #f8fcff;
-        }
+       .preview-card {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 2px solid #c4d9ea;
+    border-radius: 14px;
+    background: #f8fcff;
+}
 
-        .preview-num {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            color: white;
-            background: #0b5fa5;
-            font-size: 24px;
-            font-weight: 900;
-        }
+.preview-num {
+    width: 68px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    color: white;
+    background: #0b5fa5;
+    font-size: 20px;
+    font-weight: 900;
+    white-space: nowrap;
+}
 
         .preview-card h3 {
             margin: 0;
@@ -1160,7 +1161,7 @@
         function buildPreview() {
             const previewHtml = levels.map((lv, index) => `
                 <div class="preview-card">
-                    <div class="preview-num">${index + 1}</div>
+                    <div class="preview-num">重點${index + 1}</div>
                     <div>
                         <h3>${lv.title}</h3>
                         <p>${lv.subtitle || ""}</p>
